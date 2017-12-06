@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+	<link rel="stylesheet" type="text/css" href="css/main.css">
+</head>
+<body>
+	<div id="main">
+		<!--  分数 -->
+		<div id="score">0</div>
+		<!-- 进度条 -->
+		<div id="progress"></div>
+		
+
+		<div id="wolfs">
+			
+		</div>
+		
+		<div id="menu">
+			<div id='start'>开始</div>
+			<div id="info">游戏说明</div>
+		</div>
+
+		<div id="game-over">
+			游戏结束！<br />您的得分是0分
+		</div>
+
+	</div>
+
+	<!-- wolfs project js magic -->
+	<script type="text/javascript">
+	function $(aName){
+		return document.getElementById(aName);
+	}
+
+	function rand(m,n){
+		var r = parseInt(Math.random()*(n-m+1))+m;
+		return r;
+	}
+
+	function calcScore(type){
+		if(type == 'h'){
+			score += 10;
+		}
+		else{
+			score -= 10;
+		}
+
+		oScore.innerHTML = score;
+	}
+
+	// var section
+	var oScore = $('score');
+	var oStart = $('start');
+	var oProgress = $('progress');
+	var oMenu = $('menu');
+	var oWolfs = $('wolfs');
+	var oGameOver = $('game-over');
+
+
+	//灰太狼随机出现的位置
+	var posArray=[{l:"98px",t:"115px"},{l:"17px",t:"160px"},{l:"15px",t:"220px"},{l:"30px",t:"293px"},{l:"122px",t:"273px"},{l:"207px",t:"295px"},{l:"200px",t:"211px"},{l:"187px",t:"141px"},{l:"100px",t:"185px"}];
+
+	var progressTimer = null;
+	var showTimer = null;
+	var progress = oProgress.clientWidth;
+	var score = 0;
+	oGameOver.style.display = 'none';
+
+	// start game
+	oStart.onclick = function(){
+		// hide menu
+		oMenu.style.display = "none";
+
+		// active timer
+		progressTimer = setInterval(function(){
+			progress--;
+			if(progress <= 0){
+				// game over
+				clearInterval(progressTimer);
+				progressTimer = null;
+				
+				clearInterval(showTimer);
+				showTimer = null;
+
+				oGameOver.style.display = 'block';
+				oGameOver.innerHTML = "游戏结束！<br />您的得分是"+score+"分";
+			}
+			oProgress.style.width = progress + 'px';
+		},100);
+
+		// create wolf magic
+		showTimer = setInterval(function(){
+			// create wolf
+			var wolf = document.createElement('img');
+			wolf.index = 0;
+			// 80%:灰太狼 20%:小灰灰
+			wolf.type = rand(1,100) > 80 ? 'x' : 'h';
+			wolf.src = "imgs/"+wolf.type+'0.png';
+			oWolfs.appendChild(wolf);
+
+			// position wolf location
+			var loc;
+			var loop = true;
+			while(loop){
+				loc = rand(0,8);
+				for(var i=0;i<oWolfs.children.length;i++){
+					if(oWolfs.children[i].offsetTop == parseInt(posArray[loc].t)){
+						break;
+					}
+				}
+
+				if(i >= oWolfs.children.length){
+					loop = false;
+				}
+			}
+
+			wolf.style.left = posArray[loc].l;
+			wolf.style.top = posArray[loc].t;
+
+			// 向上运动
+			// 6*150=900
+			wolf.upTimer = setInterval(function(){
+				wolf.index++;
+				if(wolf.index >= 5){
+					clearInterval(wolf.upTimer);
+					wolf.upTimer = null;
+				}
+				wolf.src = "imgs/"+wolf.type + wolf.index + '.png';
+			},150);
+
+			// 900 + 150 ms之后，向下运动
+			wolf.stayTimer = setTimeout(function(){
+
+				wolf.downTimer = setInterval(function(){
+					wolf.index--;
+					wolf.src = "imgs/"+wolf.type + wolf.index + '.png';
+					if(wolf.index <= 0){
+						clearInterval(wolf.downTimer);
+						wolf.downTimer = null;
+
+						// remove wolf
+						oWolfs.removeChild(wolf);
+						wolf = null;
+						return;
+					}
+					
+				},150);
+
+			},900);
+
+			// attack action
+			wolf.onclick = function(){
+
+				calcScore(wolf.type);
+				
+				clearInterval(wolf.upTimer);
+				wolf.upTimer = null;
+				clearInterval(wolf.stayTimer);
+				wolf.stayTimer=null;
+				clearInterval(wolf.downTimer);
+				wolf.downTimer = null;
+
+				wolf.index = 5;
+				// 打击时候的运动
+				wolf.attackTimer = setInterval(function(){
+					wolf.index++;
+					wolf.src = "imgs/"+wolf.type + wolf.index + '.png';
+					if(wolf.index >=9){
+						clearInterval(wolf.attackTimer);
+						wolf.attackTimer=null;
+
+						oWolfs.removeChild(wolf);
+						wolf = null;
+						return;
+					}
+					
+				},100);
+
+				
+			}
+
+
+
+		// showTimer end
+		},500);
+
+
+	}
+
+	</script>
+</body>
+</html
